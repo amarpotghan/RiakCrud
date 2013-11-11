@@ -1,0 +1,18 @@
+def langs = ['java']
+langs.each { apply plugin : it }
+apply plugin : 'idea'
+apply plugin : 'eclipse'
+
+def encoding = {it.encoding = 'UTF-8'}
+
+repositories {
+    mavenCentral ()
+}
+
+dependencies {
+    compile 'com.basho.riak:riak-client:1.4.2'
+    testCompile ('junit:junit-dep:4.10') { exclude module : 'org.hamcrest:hamcrest-core' }
+    testCompile 'org.hamcrest:hamcrest-library:1.2.1'
+    testCompile 'org.mockito:mockito-all:1.9.5'
+    testCompile 'org.easytesting:fest-assert:1.4'
+}
