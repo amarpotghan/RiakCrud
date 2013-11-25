@@ -10,15 +10,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class RiakClientTests {
 
     private IRiakClient riakClient;
+    private Bucket bucket;
 
     @Before
     public void connnectDefaultRiakInstance() {
         try {
             riakClient = RiakFactory.httpClient("http://localhost:8098/riak");
+            bucket = riakClient.fetchBucket("TestBucket").execute();
         } catch (RiakException e) {
             e.printStackTrace();
         }
@@ -26,26 +29,54 @@ public class RiakClientTests {
 
     @Test
     public void storeStringKeyValue() {
-        Bucket bucket = null;
         try {
-            bucket = riakClient.fetchBucket("TestBucket").execute();
             bucket.store("1", "Potghan").execute();
         } catch (RiakRetryFailedException e) {
+            fail("Exception while inserting...please check stack trace");
             e.printStackTrace();
         }
-
         riakClient.shutdown();
     }
+
     @Test
     public void retrieveStringValue() {
-        Bucket bucket = null;
         try {
-            bucket = riakClient.fetchBucket("TestBucket").execute();
-            System.out.print(bucket.fetch("1").execute().getValueAsString());
+            assertEquals("Potghan", bucket.fetch("1").execute().getValueAsString());
         } catch (RiakRetryFailedException e) {
+            fail("Exception while retrieving...please check stack trace");
             e.printStackTrace();
         }
-
         riakClient.shutdown();
     }
+
+    @Test
+    public void storeSerializedJson() {
+        Person person = new Person();
+        person.name = "Amar";
+        person.organisation = "Thoughtworks";
+        try {
+            bucket.store("amarp", person).execute();
+        } catch (RiakRetryFailedException e) {
+            fail("Exception while inserting...please check stack trace");
+            e.printStackTrace();
+        }
+        riakClient.shutdown();
+    }
+
+    @Test
+    public void retrieveSerializedJson() {
+        try {
+            Person result = bucket.fetch("amarp", Person.class).execute();
+            assertEquals("Thoughtworks", result.organisation);
+        } catch (RiakRetryFailedException e) {
+            fail("Exception while retrieving...please check stack trace");
+            e.printStackTrace();
+        }
+        riakClient.shutdown();
+    }
+}
+
+class Person {
+    public String name;
+    public String organisation;
 }
